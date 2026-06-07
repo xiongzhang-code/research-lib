@@ -12,7 +12,7 @@ ROOT = "/dat/usercache/xiongzhang"
 DML = f"{ROOT}/projects/DML_workspace"
 BIG = f"{ROOT}/projects/2026/06/big_scale_model"
 ADML = f"{ROOT}/projects/versions/AutoDML/v1.2/adml.py"
-SUPER = f"{BIG}/superrunOpt.py"
+SUPER = f"{DML}/superrunOpt.py"
 CANCEL = f"{BIG}/tools/superrunOpt/cancel_admlq_source.py"
 KILL = f"{BIG}/kill_superrunOpt.py"
 
