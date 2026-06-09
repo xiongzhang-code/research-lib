@@ -134,9 +134,10 @@ Skills:
 
 - Keep `research_lib/skills` as the source of truth.
 - Symlink each skill into the active global Codex skill directory.
-- Preferred install target: `$CODEX_HOME/skills` or `~/.codex/skills`.
-- If another Codex surface still scans `~/.agents/skills`, symlink there too,
-  but keep the symlink target as `research_lib/skills/<skill>`.
+- Decision from MCG: install only to `$CODEX_HOME/skills` or
+  `~/.codex/skills`.
+- Do not mirror skills into `~/.agents/skills` by default. If an old tool only
+  scans `~/.agents/skills`, handle that as a one-off compatibility exception.
 - Avoid copying unless a cluster is offline or cannot access the source repo.
 
 MCP:
@@ -206,12 +207,20 @@ Split MCP tools by risk level:
 - execution tools: PySim runs, queue submission/cancel, uploads, source edits;
 - production-risk tools: anything touching submission/upload or production
   directories.
+- Decision from MCG: research queues such as `semi`, `semi2`, `predict`, `is`,
+  and `diffsolver` are not production-risk queues by themselves. They still need
+  normal dry-run and allowlist protection because they mutate queue state, but
+  they should not be blocked by production-risk policy.
 
 For execution and production-risk tools:
 
-- default to dry-run;
-- require both `dry_run=false` and a profile allow flag such as `allow_submit`,
-  `allow_cancel`, or `allow_upload`;
+- default to dry-run. Dry-run means the tool resolves the profile, validates all
+  inputs, prints the exact command, target paths, queue names, cfg counts, pids,
+  or files it would touch, but does not execute the mutation;
+- to execute a mutation, the caller must pass `dry_run=false`;
+- require `dry_run=false` plus a profile allow flag such as `allow_submit`,
+  `allow_cancel`, or `allow_upload` for actions that mutate queues, files, or
+  remote state;
 - for high-risk actions, require a `confirm_token` that includes the queue or
   target root, item count, and timestamp;
 - validate all tool arguments at handler entry, not only through MCP
@@ -273,45 +282,65 @@ Documentation checks:
 - no MCP server contains a new hard-coded cluster path except as a documented
   fallback in `paths.default.json`.
 
+## Confirmed Decisions
+
+- Install skills only to `$CODEX_HOME/skills` or `~/.codex/skills`.
+- Do not treat research queues such as `semi`, `semi2`, `predict`, `is`, or
+  `diffsolver` as production-risk queues.
+- Keep dry-run as the default mode for mutation-capable MCP tools.
+
 ## Open Preferences To Confirm
 
 These choices affect behavior and should be confirmed by MCG before
 implementation:
 
-1. Global skill install target:
-   use only `~/.codex/skills`, or mirror symlinks into both `~/.codex/skills`
-   and `~/.agents/skills`?
-2. Cluster profile selection:
-   prefer explicit `RESEARCH_CLUSTER_CONFIG`, hostname auto-detection, or
-   Codex profile-specific config?
-3. Offline clusters:
-   should install use symlinks by default and copy only on request, or copy by
-   default for stability?
-4. Safety defaults:
-   should submit/cancel/upload require both `dry_run=false` and an allow flag in
-   profile config, or is `dry_run=false` alone enough?
-5. Version pinning:
+1. Cluster profile selection:
+   decide how Codex chooses the cluster profile at startup. The options are:
+   explicit `RESEARCH_CLUSTER_CONFIG=/path/to/profile.json`, a short
+   `RESEARCH_CLUSTER=<name>` that maps to `config/clusters/<name>.json`,
+   hostname auto-detection, or a Codex profile-specific setting. Explicit config
+   is safest and easiest to audit; hostname auto-detection is more convenient
+   but can choose the wrong profile if hostnames are reused or inconsistent.
+2. Offline cluster install mode:
+   clarify what counts as an offline cluster and how to install there. In this
+   document, an offline cluster means a machine where the canonical
+   `research_lib` checkout is not reachable at runtime, for example because the
+   shared filesystem is not mounted, network access is restricted, or the
+   cluster needs a frozen audited snapshot. Symlink install means global skills
+   point directly to the live `research_lib/skills/<skill>` directories, so
+   updates and rollbacks follow the repo immediately. Copy pinned snapshot means
+   copying skill/MCP files into the target machine and recording the source
+   commit or tag; it is more robust when the source repo is unavailable, but it
+   can drift and must be updated explicitly.
+3. Safety execution gate:
+   decide whether queue/file mutations require only `dry_run=false`, or
+   `dry_run=false` plus profile allow flags such as `allow_submit` and
+   `allow_cancel`. The stricter two-key gate is recommended because it prevents
+   a profile that is meant to be read-only from mutating queues even if a caller
+   passes `dry_run=false`.
+4. Version pinning:
    should each cluster track `master/main`, a named tag, or a pinned commit?
-6. Multiple users:
+5. Multiple users:
    should config paths be user-specific, or should profiles support template
    variables like `${USER}`, `${HOME}`, and `${CLUSTER}`?
-7. MCP scope:
+6. MCP scope:
    should all MCP servers be globally enabled, or should high-risk ones such as
    submission/upload be opt-in per cluster?
-8. Queue allowlist:
-   which queues can MCP submit/cancel operate on, for example `semi`, `semi2`,
-   `predict`, `is`, and `diffsolver`; which queues are production-risk?
-9. Confirmation model:
+7. Queue allowlist:
+   which queue names should be allowed for real submit/cancel? Confirmed:
+   `semi`, `semi2`, `predict`, `is`, and `diffsolver` are not production-risk,
+   but they still need to be explicitly listed if allowlist enforcement is used.
+8. Confirmation model:
    is `dry_run=false` plus profile allow flag enough for queue operations, or
    should high-risk operations require a `confirm_token`?
-10. Existing project env files:
+9. Existing project env files:
    should project-specific env files such as AutoDML `cluster_paths.env` be
    generated from `research_lib` profiles, or kept as hand-maintained local
    overrides?
-11. Execution tools:
+10. Execution tools:
    should tools such as `run_pysim_xml` default to disabled/dry-run unless the
    profile explicitly enables execution?
-12. Workspace mutation:
+11. Workspace mutation:
    should MCP real execution be limited to `/dat/workspace/xiongzhang/tmp`
    work copies unless the user explicitly allows direct source-tree edits?
 
