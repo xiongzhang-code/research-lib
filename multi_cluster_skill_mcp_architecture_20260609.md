@@ -119,11 +119,16 @@ Add a cluster-aware config file. Proposed schema shape:
 
 Path resolution priority:
 
-1. explicit env var: `RESEARCH_CLUSTER_CONFIG`;
-2. env var: `RESEARCH_CLUSTER`;
-3. hostname-based profile: `config/clusters/$(hostname).json`;
-4. default profile: `config/paths.default.json`;
-5. error with a clear missing-key message.
+1. `research-mcp` reads a dedicated env file, by default
+   `~/.config/research_lib/env`.
+2. That env file should set `RESEARCH_CLUSTER=<cluster-name>`, for example
+   `RESEARCH_CLUSTER=gs010`.
+3. If the env file is missing or does not set `RESEARCH_CLUSTER`, fall back to
+   the process environment variable `RESEARCH_CLUSTER`.
+4. Resolve the selected cluster name to
+   `config/clusters/<RESEARCH_CLUSTER>.json`.
+5. If `RESEARCH_CLUSTER` is missing, or the matching cluster profile does not
+   exist, fail loudly with a clear error. Do not guess from hostname.
 
 MCP code should never silently fall back to a wrong queue, repo, or production
 path when a required path is missing.
@@ -138,7 +143,10 @@ Skills:
   `~/.codex/skills`.
 - Do not mirror skills into `~/.agents/skills` by default. If an old tool only
   scans `~/.agents/skills`, handle that as a one-off compatibility exception.
-- Avoid copying unless a cluster is offline or cannot access the source repo.
+- Use symlinks by default. Copy a pinned snapshot only when the canonical
+  `research_lib` checkout is unavailable at runtime, for example on an offline
+  cluster or a frozen audited environment. A copied snapshot must record the
+  source commit or tag.
 
 MCP:
 
@@ -288,59 +296,47 @@ Documentation checks:
 - Do not treat research queues such as `semi`, `semi2`, `predict`, `is`, or
   `diffsolver` as production-risk queues.
 - Keep dry-run as the default mode for mutation-capable MCP tools.
+- Select cluster profiles with `RESEARCH_CLUSTER`, not hostname guessing.
+  `research-mcp` should first load `~/.config/research_lib/env`, then fall back
+  to the process environment. If `RESEARCH_CLUSTER` is unresolved, fail.
+- Use symlink installs by default. Use copy pinned snapshots only when the
+  canonical `research_lib` checkout is unavailable at runtime, and record the
+  source commit or tag.
 
 ## Open Preferences To Confirm
 
 These choices affect behavior and should be confirmed by MCG before
 implementation:
 
-1. Cluster profile selection:
-   decide how Codex chooses the cluster profile at startup. The options are:
-   explicit `RESEARCH_CLUSTER_CONFIG=/path/to/profile.json`, a short
-   `RESEARCH_CLUSTER=<name>` that maps to `config/clusters/<name>.json`,
-   hostname auto-detection, or a Codex profile-specific setting. Explicit config
-   is safest and easiest to audit; hostname auto-detection is more convenient
-   but can choose the wrong profile if hostnames are reused or inconsistent.
-2. Offline cluster install mode:
-   clarify what counts as an offline cluster and how to install there. In this
-   document, an offline cluster means a machine where the canonical
-   `research_lib` checkout is not reachable at runtime, for example because the
-   shared filesystem is not mounted, network access is restricted, or the
-   cluster needs a frozen audited snapshot. Symlink install means global skills
-   point directly to the live `research_lib/skills/<skill>` directories, so
-   updates and rollbacks follow the repo immediately. Copy pinned snapshot means
-   copying skill/MCP files into the target machine and recording the source
-   commit or tag; it is more robust when the source repo is unavailable, but it
-   can drift and must be updated explicitly.
-3. Safety execution gate:
+1. Safety execution gate:
    decide whether queue/file mutations require only `dry_run=false`, or
    `dry_run=false` plus profile allow flags such as `allow_submit` and
    `allow_cancel`. The stricter two-key gate is recommended because it prevents
    a profile that is meant to be read-only from mutating queues even if a caller
    passes `dry_run=false`.
-4. Version pinning:
+2. Version pinning:
    should each cluster track `master/main`, a named tag, or a pinned commit?
-5. Multiple users:
+3. Multiple users:
    should config paths be user-specific, or should profiles support template
    variables like `${USER}`, `${HOME}`, and `${CLUSTER}`?
-6. MCP scope:
+4. MCP scope:
    should all MCP servers be globally enabled, or should high-risk ones such as
    submission/upload be opt-in per cluster?
-7. Queue allowlist:
+5. Queue allowlist:
    which queue names should be allowed for real submit/cancel? Confirmed:
    `semi`, `semi2`, `predict`, `is`, and `diffsolver` are not production-risk,
    but they still need to be explicitly listed if allowlist enforcement is used.
-8. Confirmation model:
+6. Confirmation model:
    is `dry_run=false` plus profile allow flag enough for queue operations, or
    should high-risk operations require a `confirm_token`?
-9. Existing project env files:
+7. Existing project env files:
    should project-specific env files such as AutoDML `cluster_paths.env` be
    generated from `research_lib` profiles, or kept as hand-maintained local
    overrides?
-10. Execution tools:
+8. Execution tools:
    should tools such as `run_pysim_xml` default to disabled/dry-run unless the
    profile explicitly enables execution?
-11. Workspace mutation:
+9. Workspace mutation:
    should MCP real execution be limited to `/dat/workspace/xiongzhang/tmp`
    work copies unless the user explicitly allows direct source-tree edits?
 
