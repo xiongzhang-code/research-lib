@@ -11,6 +11,7 @@ Implemented skills:
 
 - `task-monitor`: ADMLQ job state, retry/fail routing, NIO completeness, OPTQ handoff.
 - `admlq-debugger`: ADMLQ fault root-cause workflow, runtime/config repair guardrails, AutoDML evidence checks.
+- `optq-debugger`: OPTQ/OptTest fault root-cause workflow, live queue repair guardrails, result-state evidence checks.
 - `dpvcfg-editor`: DynamicPV XML/datacfg editing, cfgqueue generation, conversion checks.
 - `opt-analyst`: OPTQ/optresult analysis, value-added checks, hard-constraint evidence.
 - `nio-verifier`: NIO acceptance, tratio/date/snaptime/live-hist/checkpoint checks.
