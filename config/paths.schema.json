@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "research_lib cluster profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cluster", "paths", "bins", "behavior"],
+  "properties": {
+    "cluster": {"type": "string", "minLength": 1},
+    "paths": {
+      "type": "object",
+      "additionalProperties": {"type": "string"},
+      "required": [
+        "research_lib",
+        "dml_workspace",
+        "dynamicpv",
+        "autodml",
+        "submission_check",
+        "opttest",
+        "optq",
+        "optresult",
+        "pysim",
+        "tmp",
+        "venv_activate"
+      ]
+    },
+    "bins": {
+      "type": "object",
+      "additionalProperties": {"type": "string"},
+      "required": ["python", "niupos2025", "nvidia_smi", "gpustat"]
+    },
+    "behavior": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default_dry_run", "allow_submit", "allow_cancel", "allow_upload"],
+      "properties": {
+        "default_dry_run": {"type": "boolean"},
+        "allow_submit": {"type": "boolean"},
+        "allow_cancel": {"type": "boolean"},
+        "allow_upload": {"type": "boolean"}
+      }
+    }
+  }
+}
+

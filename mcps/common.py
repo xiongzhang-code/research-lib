@@ -16,9 +16,20 @@ from pathlib import Path
 from typing import Any, Callable
 
 
-TMP_ROOT = Path("/dat/workspace/xiongzhang/tmp")
-VENV_ACTIVATE = Path("/home/xiongzhang/venv_lgb/bin/activate")
-PYTHON = os.environ.get("RESEARCH_MCP_PYTHON", sys.executable)
+TMP_ROOT = Path(os.environ.get("RESEARCH_TMP", "/dat/workspace/xiongzhang/tmp"))
+VENV_ACTIVATE = Path(os.environ.get("RESEARCH_VENV_ACTIVATE", "/home/xiongzhang/venv_lgb/bin/activate"))
+PYTHON = os.environ.get("RESEARCH_BIN_PYTHON") or os.environ.get("RESEARCH_MCP_PYTHON", sys.executable)
+
+
+def env_path(name: str, default: str) -> str:
+    return os.environ.get(name, default)
+
+
+def env_bool(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.lower() in {"1", "true", "yes", "on"}
 
 
 @dataclass(frozen=True)
@@ -157,9 +168,32 @@ def describe_files(paths: list[str], limit: int = 50) -> dict[str, Any]:
     return {"count": len(paths), "shown": out}
 
 
-def dry_run_or_exec(argv: list[str], dry_run: bool = True, timeout: int = 120, cwd: str | None = None) -> dict[str, Any]:
+def dry_run_or_exec(
+    argv: list[str],
+    dry_run: bool = True,
+    timeout: int = 120,
+    cwd: str | None = None,
+    allow_env: str | None = None,
+    confirmation_token: str | None = None,
+) -> dict[str, Any]:
     if dry_run:
         return {"dry_run": True, "argv": argv, "cwd": cwd or os.getcwd()}
+    if allow_env and not env_bool(allow_env):
+        return {
+            "dry_run": False,
+            "blocked": True,
+            "reason": f"{allow_env} is not enabled in the selected research_lib cluster profile",
+            "argv": argv,
+            "cwd": cwd or os.getcwd(),
+        }
+    if confirmation_token is None or len(confirmation_token.strip()) < 16:
+        return {
+            "dry_run": False,
+            "blocked": True,
+            "reason": "dry_run=false requires a non-empty confirmation_token that identifies the target and timestamp",
+            "argv": argv,
+            "cwd": cwd or os.getcwd(),
+        }
     return run_command(argv, cwd=cwd, timeout=timeout)
 
 

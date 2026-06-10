@@ -5,12 +5,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from common import Tool, describe_files, json_response, list_paths, main, python_script, schema
+from common import Tool, describe_files, env_path, json_response, list_paths, main, python_script, schema
 
 
 ROOT = "/dat/usercache/xiongzhang"
-DML = f"{ROOT}/projects/DML_workspace"
-BIG_TOOLS = f"{ROOT}/projects/2026/06/big_scale_model/tools"
+DML = env_path("RESEARCH_DML_WORKSPACE", f"{ROOT}/projects/DML_workspace")
+BIG_TOOLS = f"{env_path('RESEARCH_BIG_SCALE_MODEL', f'{ROOT}/projects/2026/06/big_scale_model')}/tools"
 
 
 def find_cfgs(args: dict) -> dict:

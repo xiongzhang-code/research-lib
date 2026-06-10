@@ -5,13 +5,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from common import PYTHON, Tool, describe_files, dry_run_or_exec, json_response, list_paths, main, python_script, queue_counts, schema
+from common import PYTHON, Tool, describe_files, dry_run_or_exec, env_path, json_response, list_paths, main, python_script, queue_counts, schema
 
 
 ROOT = "/dat/usercache/xiongzhang"
-DML = f"{ROOT}/projects/DML_workspace"
-BIG = f"{ROOT}/projects/2026/06/big_scale_model"
-ADML = f"{ROOT}/projects/versions/AutoDML/v1.2/adml.py"
+DML = env_path("RESEARCH_DML_WORKSPACE", f"{ROOT}/projects/DML_workspace")
+BIG = env_path("RESEARCH_BIG_SCALE_MODEL", f"{ROOT}/projects/2026/06/big_scale_model")
+ADML = f"{env_path('RESEARCH_AUTODML', f'{ROOT}/projects/versions/AutoDML/v1.2')}/adml.py"
 SUPER = f"{DML}/superrunOpt.py"
 CANCEL = f"{BIG}/tools/superrunOpt/cancel_admlq_source.py"
 KILL = f"{BIG}/kill_superrunOpt.py"
@@ -37,13 +37,25 @@ def submit(args: dict) -> dict:
     cfgpaths = args["cfgpaths"]
     queue = args.get("queue", "semi")
     dry_run = bool(args.get("dry_run", True))
-    return json_response(dry_run_or_exec([PYTHON, SUPER, "-q", queue, *cfgpaths], dry_run=dry_run, timeout=int(args.get("timeout", 300))))
+    return json_response(dry_run_or_exec(
+        [PYTHON, SUPER, "-q", queue, *cfgpaths],
+        dry_run=dry_run,
+        timeout=int(args.get("timeout", 300)),
+        allow_env="RESEARCH_ALLOW_SUBMIT",
+        confirmation_token=args.get("confirmation_token"),
+    ))
 
 
 def cancel(args: dict) -> dict:
     cfgpath = args["cfgpath"]
     dry_run = bool(args.get("dry_run", True))
-    return json_response(dry_run_or_exec([PYTHON, CANCEL, cfgpath], dry_run=dry_run, timeout=int(args.get("timeout", 120))))
+    return json_response(dry_run_or_exec(
+        [PYTHON, CANCEL, cfgpath],
+        dry_run=dry_run,
+        timeout=int(args.get("timeout", 120)),
+        allow_env="RESEARCH_ALLOW_CANCEL",
+        confirmation_token=args.get("confirmation_token"),
+    ))
 
 
 def worker_status(args: dict) -> dict:
@@ -73,11 +85,13 @@ TOOLS = [
         "cfgpaths": {"type": "array", "items": {"type": "string"}},
         "queue": {"type": "string", "default": "semi"},
         "dry_run": {"type": "boolean", "default": True},
+        "confirmation_token": {"type": "string"},
         "timeout": {"type": "integer", "default": 300},
     }, ["cfgpaths"]), submit),
     Tool("cancel_source", "Cancel an ADMLQ source config. Dry-run by default.", schema({
         "cfgpath": {"type": "string"},
         "dry_run": {"type": "boolean", "default": True},
+        "confirmation_token": {"type": "string"},
         "timeout": {"type": "integer", "default": 120},
     }, ["cfgpath"]), cancel),
     Tool("worker_status", "Inspect live ADMLQ/superrunOpt/runpysim processes.", schema({

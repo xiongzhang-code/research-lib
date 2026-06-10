@@ -9,16 +9,17 @@ import subprocess
 import time
 from pathlib import Path
 
-from common import TMP_ROOT, Tool, json_response, main, python_script, run_command, schema
+from common import TMP_ROOT, Tool, env_path, json_response, main, python_script, run_command, schema
 
 
 ROOT = "/dat/usercache/xiongzhang"
-DML_TOOLS = f"{ROOT}/projects/DML_workspace/tools"
-DPV = f"{ROOT}/projects/versions/DynamicPV/v4.3.3"
+DML_TOOLS = f"{env_path('RESEARCH_DML_WORKSPACE', f'{ROOT}/projects/DML_workspace')}/tools"
+DPV = env_path("RESEARCH_DYNAMICPV", f"{ROOT}/projects/versions/DynamicPV/v4.3.3")
 CHECKNIO = f"{DML_TOOLS}/checknio.py"
 COMPARE = f"{DPV}/dynamicpv/dpvdebug/comparenio.py"
 TEST_CKP = f"{DPV}/dynamicpv/dpvdebug/test_ckp.py"
 TEST_LIVEHIST = f"{DPV}/dynamicpv/dpvdebug/test_livehist.py"
+NIOPOS2025 = env_path("RESEARCH_BIN_NIOPOS2025", "/dat/pysimrelease/pysim-5.0.0/tools/niupos2025")
 
 
 def _new_checknio_run_dir() -> Path:
@@ -92,7 +93,7 @@ def checkpoint(args: dict) -> dict:
 
 def poscorr(args: dict) -> dict:
     niopaths = args["niopaths"]
-    cmd = ["/dat/pysimrelease/pysim-5.0.0/tools/niupos2025", "basenio", "-l", *niopaths]
+    cmd = [NIOPOS2025, "basenio", "-l", *niopaths]
     if args.get("output_top"):
         cmd += ["-o", str(args["output_top"])]
     return json_response(run_command(cmd, timeout=int(args.get("timeout", 300))))

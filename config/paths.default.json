@@ -1,0 +1,30 @@
+{
+  "cluster": "gs010",
+  "paths": {
+    "research_lib": "/dat/usercache/xiongzhang/research_lib",
+    "dml_workspace": "/dat/usercache/xiongzhang/projects/DML_workspace",
+    "dynamicpv": "/dat/usercache/xiongzhang/projects/versions/DynamicPV/v4.3.3",
+    "autodml": "/dat/usercache/xiongzhang/projects/versions/AutoDML/v1.2",
+    "submission_check": "/dat/usercache/xiongzhang/projects/versions/SubmissionCheck/v0.0",
+    "big_scale_model": "/dat/usercache/xiongzhang/projects/2026/06/big_scale_model",
+    "opttest": "/dat/usercache/xiongzhang/projects/versions/OptTest/v0.4",
+    "optq": "/dat/usercache/xiongzhang/opttest/NNOPTQ_zz500",
+    "optresult": "/dat/usercache/xiongzhang/opttest/optresult/ZZ500",
+    "pysim": "/dat/pysimrelease/pysim-5.0.0",
+    "tmp": "/dat/workspace/xiongzhang/tmp",
+    "venv_activate": "/home/xiongzhang/venv_lgb/bin/activate"
+  },
+  "bins": {
+    "python": "python3",
+    "niupos2025": "/dat/pysimrelease/pysim-5.0.0/tools/niupos2025",
+    "nvidia_smi": "nvidia-smi",
+    "gpustat": "gpustat"
+  },
+  "behavior": {
+    "default_dry_run": true,
+    "allow_submit": false,
+    "allow_cancel": false,
+    "allow_upload": false
+  }
+}
+

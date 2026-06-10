@@ -5,13 +5,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from common import Tool, describe_files, json_response, list_paths, main, python_script, run_command, schema
+from common import Tool, describe_files, env_path, json_response, list_paths, main, python_script, run_command, schema
 
 
 ROOT = "/dat/usercache/xiongzhang"
-BIG_TOOLS = f"{ROOT}/projects/2026/06/big_scale_model/tools"
-OPTQ = f"{ROOT}/opttest/NNOPTQ_zz500"
-OPTRESULT = f"{ROOT}/opttest/optresult/ZZ500"
+BIG_TOOLS = f"{env_path('RESEARCH_BIG_SCALE_MODEL', f'{ROOT}/projects/2026/06/big_scale_model')}/tools"
+OPTQ = env_path("RESEARCH_OPTQ", f"{ROOT}/opttest/NNOPTQ_zz500")
+OPTRESULT = env_path("RESEARCH_OPTRESULT", f"{ROOT}/opttest/optresult/ZZ500")
+NIOPOS2025 = env_path("RESEARCH_BIN_NIOPOS2025", "/dat/pysimrelease/pysim-5.0.0/tools/niupos2025")
 
 
 def inspect_optq(args: dict) -> dict:
@@ -66,7 +67,7 @@ def exposure_summary(args: dict) -> dict:
 
 
 def niupos(args: dict) -> dict:
-    argv = ["/dat/pysimrelease/pysim-5.0.0/tools/niupos2025", *args["args"]]
+    argv = [NIOPOS2025, *args["args"]]
     return json_response(run_command(argv, timeout=int(args.get("timeout", 300))))
 
 

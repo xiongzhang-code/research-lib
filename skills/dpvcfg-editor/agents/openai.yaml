@@ -1,0 +1,4 @@
+interface:
+  display_name: "DPVCFG Editor"
+  short_description: "Rewrite and validate DynamicPV dpvcfg files"
+  default_prompt: "Use $dpvcfg-editor to rewrite or review a DynamicPV dpvcfg XML, convert an onetrain config into a freq=30 modelDecayNum=2 di_delay=9 version, or align a training config with a production script."

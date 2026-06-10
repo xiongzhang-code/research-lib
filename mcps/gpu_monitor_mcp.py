@@ -5,13 +5,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from common import Tool, json_response, main, python_script, run_shell, schema
+from common import Tool, env_path, json_response, main, python_script, run_shell, schema
 
 
 ROOT = "/dat/usercache/xiongzhang"
-AUTODML = f"{ROOT}/projects/versions/AutoDML/v1.2"
-DPV = f"{ROOT}/projects/versions/DynamicPV/v4.3.3"
-LEASE_DIR = "/dat/workspace/xiongzhang/tmp/dpv_diffsolver_solver_leases"
+AUTODML = env_path("RESEARCH_AUTODML", f"{ROOT}/projects/versions/AutoDML/v1.2")
+DPV = env_path("RESEARCH_DYNAMICPV", f"{ROOT}/projects/versions/DynamicPV/v4.3.3")
+LEASE_DIR = f"{env_path('RESEARCH_TMP', '/dat/workspace/xiongzhang/tmp')}/dpv_diffsolver_solver_leases"
 
 
 def gpustat(args: dict) -> dict:
@@ -21,7 +21,7 @@ def gpustat(args: dict) -> dict:
 
 
 def nvidia(args: dict) -> dict:
-    return json_response(run_shell(args.get("command", "nvidia-smi"), timeout=int(args.get("timeout", 30))))
+    return json_response(run_shell(args.get("command", env_path("RESEARCH_BIN_NVIDIA_SMI", "nvidia-smi")), timeout=int(args.get("timeout", 30))))
 
 
 def monitor_diffsolver(args: dict) -> dict:
@@ -46,7 +46,7 @@ def lease_state(args: dict) -> dict:
 
 
 def diffsolver_log(args: dict) -> dict:
-    log = args.get("log", f"{ROOT}/projects/DML_workspace/log/ADMLQ_diffsolver.log")
+    log = args.get("log", f"{env_path('RESEARCH_DML_WORKSPACE', f'{ROOT}/projects/DML_workspace')}/log/ADMLQ_diffsolver.log")
     lines = int(args.get("lines", 200))
     pattern = args.get("pattern")
     cmd = f"tail -n {lines} {log!r}"
