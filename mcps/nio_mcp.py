@@ -3,9 +3,13 @@
 
 from __future__ import annotations
 
+import os
+import shutil
+import subprocess
+import time
 from pathlib import Path
 
-from common import Tool, json_response, main, python_script, run_command, schema
+from common import TMP_ROOT, Tool, json_response, main, python_script, run_command, schema
 
 
 ROOT = "/dat/usercache/xiongzhang"
@@ -17,6 +21,17 @@ TEST_CKP = f"{DPV}/dynamicpv/dpvdebug/test_ckp.py"
 TEST_LIVEHIST = f"{DPV}/dynamicpv/dpvdebug/test_livehist.py"
 
 
+def _new_checknio_run_dir() -> Path:
+    run_dir = TMP_ROOT / f"nio_mcp_checknio_{os.getpid()}_{time.time_ns()}"
+    run_dir.mkdir(parents=True, exist_ok=False)
+    return run_dir
+
+
+def _checknio_was_interrupted(result: dict) -> bool:
+    stderr = result.get("stderr") or ""
+    return result.get("returncode") in {-2, 130} or "KeyboardInterrupt" in stderr
+
+
 def checknio(args: dict) -> dict:
     argv = []
     if args.get("start"):
@@ -26,7 +41,32 @@ def checknio(args: dict) -> dict:
     if args.get("dateoffset") is not None:
         argv += ["--dateoffset", str(args["dateoffset"])]
     argv += [args["niopath"]]
-    return json_response(python_script(CHECKNIO, argv, timeout=int(args.get("timeout", 300))))
+    run_dir = _new_checknio_run_dir()
+    should_cleanup = False
+    try:
+        result = python_script(CHECKNIO, argv, timeout=int(args.get("timeout", 300)), cwd=str(run_dir))
+        result["tmp_run_dir"] = str(run_dir)
+        should_cleanup = result.get("returncode") == 0 or _checknio_was_interrupted(result)
+        result["tmp_run_dir_cleaned"] = should_cleanup
+        return json_response(result)
+    except subprocess.TimeoutExpired as exc:
+        should_cleanup = True
+        return json_response({
+            "argv": [CHECKNIO, *argv],
+            "cwd": str(run_dir),
+            "error": "timeout",
+            "timeout": exc.timeout,
+            "stdout": (exc.stdout or "").decode() if isinstance(exc.stdout, bytes) else (exc.stdout or ""),
+            "stderr": (exc.stderr or "").decode() if isinstance(exc.stderr, bytes) else (exc.stderr or ""),
+            "tmp_run_dir": str(run_dir),
+            "tmp_run_dir_cleaned": True,
+        })
+    except KeyboardInterrupt:
+        should_cleanup = True
+        raise
+    finally:
+        if should_cleanup:
+            shutil.rmtree(run_dir, ignore_errors=True)
 
 
 def compare_nio(args: dict) -> dict:

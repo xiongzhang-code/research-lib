@@ -10,6 +10,7 @@ Announce: `I'm using nio-verifier to check NIO completeness, date alignment, and
 ## Defaults
 
 - Standard check: `checknio.py -s 20220101`
+- Temporary checknio run artifacts: create them under `/dat/workspace/xiongzhang/tmp` by default.
 - DPV debug tools: `/dat/usercache/xiongzhang/projects/versions/DynamicPV/v4.3.3/dynamicpv/dpvdebug`
 - MCP entrypoints:
   - `/dat/usercache/xiongzhang/research_lib/mcps/nio_mcp.py`
@@ -24,6 +25,7 @@ Announce: `I'm using nio-verifier to check NIO completeness, date alignment, and
 5. If incomplete, inspect missing date ranges, snaptime mismatch, wrong dumpName, stale output directory, and source queue status.
 6. For live/hist issues, run `nio-mcp.test_livehist` or `compare_nio` on the smallest relevant cfg/NIO pair.
 7. For checkpoint/debug questions, use `nio-mcp.test_checkpoint`.
+8. If checknio is interrupted, make sure temporary `run_comparenio_cfg_*` configs and generated pnl files are removed.
 
 ## Report Shape
 
@@ -38,3 +40,4 @@ Announce: `I'm using nio-verifier to check NIO completeness, date alignment, and
 - Never accept a NIO based only on file existence.
 - Keep hist/live and OPT result judgments separate.
 - Use explicit NIO file paths for correlation comparisons.
+- Do not leave checknio-generated configs or pnl files in the caller's working directory; use `/dat/workspace/xiongzhang/tmp`.
