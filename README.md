@@ -176,8 +176,8 @@ The top-level docs overlap heavily. Use them this way:
 |---|---|---|
 | `docs/research_lib_publish_plan_20260610.md` | Final implementation version | Source for current structure, `research-*` MCP names, symlink skills, `research-mcp`, validation, and rollback. |
 | `docs/multi_cluster_skill_mcp_architecture_20260609.md` | Architecture reference | Source for long-term principles: source of truth, cluster profiles, packaging boundary, and safety model. |
-| `docs/mcp_skill_workflow_summary_20260607.md` | Early workflow taxonomy | Source for MCP/skill categories and the core research loop. Rollout order is historical. |
-| `docs/README_mcp_skills_20260607.md` | Early implementation index | Historical only. Some details are stale, including the old non-git note, direct `python3` startup wording, and 7-skill list. |
+| `docs/archive/mcp_skill_workflow_summary_20260607.md` | Archived early workflow taxonomy | Historical source for MCP/skill categories and the core research loop. Current inventory lives in this README. |
+| `docs/archive/README_mcp_skills_20260607.md` | Archived early implementation index | Historical only. Some details are stale, including the old non-git note, direct `python3` startup wording, and 7-skill list. |
 
 Consolidated duplicate themes:
 
@@ -186,4 +186,5 @@ Consolidated duplicate themes:
 - launcher, cluster profile, dry-run safety, and symlink publishing are each
   documented once here;
 - historical checkpoints, one-time migration details, and old direct script
-  registration examples stay in `docs/` rather than the main entrypoint.
+  registration examples stay under `docs/` or `docs/archive/` rather than the
+  main entrypoint.
